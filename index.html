@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmoni dalam Ekosistem - IPAS Kelas V</title>
+    <!-- Tailwind CSS untuk styling responsif dan cepat -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts untuk tipografi yang ramah anak -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4ade80;
+            --primary-dark: #166534;
+            --secondary: #60a5fa;
+            --accent: #facc15;
+            --danger: #f87171;
+            --text-main: #1f2937;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdf4;
+            color: var(--text-main);
+            overflow: hidden; /* Mencegah scroll layar, fokus pada aplikasi interaktif */
+            touch-action: none; /* Optimalisasi layar sentuh / IFP */
+            user-select: none;
+        }
+
+        /* Container utama disesuaikan untuk rasio 16:9 */
+        #app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Animasi Latar Belakang & Elemen */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+            50% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); }
+        }
+        @keyframes cloud-move {
+            from { background-position: 0 0; }
+            to { background-position: -1000px 0; }
+        }
+        @keyframes flow-dash {
+            to { stroke-dashoffset: -20; }
+        }
+
+        .floating { animation: float 3s ease-in-out infinite; }
+        .pulsing { animation: pulse-glow 2s infinite; }
+        
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            flex-direction: column;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Styling Tombol Interaktif */
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            border-radius: 9999px;
+            transition: all 0.2s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), inset 0 -4px 0 rgba(0,0,0,0.2);
+            cursor: pointer;
+            text-align: center;
+            border: 4px solid white;
+        }
+        .btn-large:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 0 rgba(0,0,0,0), inset 0 -1px 0 rgba(0,0,0,0.2);
+        }
+
+        .btn-green { background-color: var(--primary); color: var(--primary-dark); }
+        .btn-blue { background-color: var(--secondary); color: white; }
+        .btn-yellow { background-color: var(--accent); color: #854d0e; }
+        
+        /* Navigasi Top Bar */
+        .top-bar {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            right: 1rem;
+            display: flex;
+            justify-content: space-between;
+            z-index: 50;
+        }
+
+        .icon-btn {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            border: 3px solid #e5e7eb;
+        }
+        .icon-btn:active { transform: scale(0.95); }
+
+        /* Komponen Permainan */
+        .card-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            border: 4px solid transparent;
+            transition: transform 0.2s;
+        }
+        .card-item.selected { border-color: var(--accent); transform: scale(1.05); }
+        .drop-zone {
+            min-height: 150px;
+            border: 4px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* Jaring-jaring Makanan SVG Layer */
+        #svg-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .food-web-arrow {
+            stroke: #f59e0b;
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 10;
+            animation: flow-dash 1s linear infinite;
+        }
+
+        /* Latar Belakang Lingkungan */
+        .bg-pattern {
+            background-color: #a7f3d0;
+            background-image: radial-gradient(#34d399 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+        .bg-clouds {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><path d="M20 50 Q30 40 40 50 Q50 30 70 50 Q80 40 90 60 L10 60 Z" fill="white" opacity="0.3"/></svg>') repeat-x;
+            animation: cloud-move 60s linear infinite;
+        }
+        
+        /* Scrollbar kustom untuk konten teks */
+        .scrollable-content {
+            overflow-y: auto;
+            max-height: 70vh;
+            padding-right: 1rem;
+        }
+        .scrollable-content::-webkit-scrollbar { width: 10px; }
+        .scrollable-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 5px; }
+        .scrollable-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+
+        /* Emoji Size */
+        .emoji-lg { font-size: 4rem; }
+        .emoji-xl { font-size: 6rem; }
+    </style>
+</head>
+<body class="bg-pattern">
+    <div id="app-container">
+        
+        <!-- Top Navigation Bar untuk Guru & Siswa -->
+        <div class="top-bar">
+            <div class="flex gap-4">
+                <button class="icon-btn" onclick="navTo('screen-home')" title="Beranda">🏠</button>
+                <button class="icon-btn" id="btn-back" onclick="goBack()" style="display:none;" title="Kembali">⬅️</button>
+            </div>
+            <div class="flex gap-4">
+                <button class="icon-btn" onclick="toggleMute()" id="btn-mute" title="Suara">🔊</button>
+                <button class="icon-btn" onclick="toggleFullscreen()" title="Layar Penuh">🔲</button>
+                <button class="icon-btn" onclick="navTo('screen-profile')" title="Profil Pembuat">ℹ️</button>
+            </div>
+        </div>
+
+        <div id="screen-home" class="screen active bg-gradient-to-b from-blue-300 to-green-300">
+            <div class="absolute inset-0 bg-clouds" style="opacity: 0.8; height: 300px;"></div>
+            <div class="flex-1 flex flex-col items-center justify-center relative z-10 p-8 text-center">
+                <div class="mb-4">
+                    <span class="emoji-xl floating drop-shadow-xl">🌍</span>
+                    <span class="emoji-xl floating drop-shadow-xl" style="animation-delay: 0.5s">🦅</span>
+                    <span class="emoji-xl floating drop-shadow-xl" style="animation-delay: 1s">🌾</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-black text-white drop-shadow-md mb-2 tracking-tight">
+                    HARMONI DALAM <span class="text-yellow-400">EKOSISTEM</span>
+                </h1>
+                <h2 class="text-2xl md:text-3xl font-bold text-green-900 bg-white/70 px-6 py-2 rounded-full mb-8 shadow-sm">
+                    Petualangan Rantai dan Jaring-Jaring Makanan
+                </h2>
+                <div class="flex flex-wrap justify-center gap-6 mt-8">
+                    <button class="btn-large btn-yellow pulsing" onclick="startGame()">▶️ MULAI PETUALANGAN</button>
+                    <button class="btn-large btn-blue" onclick="navTo('screen-cp-tp')">🎯 TUJUAN PEMBELAJARAN</button>
+                </div>
+                <div class="absolute bottom-4 left-0 right-0 text-center">
+                    <p class="font-bold text-green-900 bg-white/50 inline-block px-4 py-1 rounded-full text-lg">
+                        Disusun oleh: Dindo Noto Sastro, S.Pd. | IPAS Kelas V SD (Fase C)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-cp-tp" class="screen bg-gradient-to-br from-green-100 to-blue-100 p-8 pt-24">
+            <h2 class="text-4xl font-bold text-center text-green-800 mb-8">🎯 Tujuan Pembelajaran</h2>
+            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 scrollable-content">
+                <div class="bg-white p-6 rounded-3xl shadow-lg border-t-8 border-blue-400">
+                    <h3 class="text-2xl font-bold mb-4 text-blue-600">Capaian Pembelajaran (CP)</h3>
+                    <p class="text-lg leading-relaxed text-gray-700">
+                        Siswa menyelidiki bagaimana hubungan saling ketergantungan antar komponen biotik abiotik dapat memengaruhi kestabilan suatu ekosistem di lingkungan sekitarnya.
+                    </p>
+                    <div class="mt-4 p-4 bg-blue-50 rounded-xl">
+                        <strong>Keterampilan Proses:</strong> Mengamati, memprediksi, menyelidiki, menganalisis, dan merefleksi proses belajar.
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-3xl shadow-lg border-t-8 border-green-400">
+                    <h3 class="text-2xl font-bold mb-4 text-green-600">Tujuan Khusus</h3>
+                    <ul class="list-disc pl-5 text-lg leading-relaxed text-gray-700 space-y-2">
+                        <li>Mengidentifikasi komponen biotik & abiotik.</li>
+                        <li>Menjelaskan peran produsen, konsumen, dan pengurai.</li>
+                        <li>Menyusun rantai dan jaring-jaring makanan dengan arah panah (aliran energi) yang tepat.</li>
+                        <li>Menganalisis dampak perubahan populasi terhadap ekosistem.</li>
+                        <li>Mengusulkan tindakan nyata pelestarian lingkungan.</li>
+                    </ul>
+                </div>
+                <div class="md:col-span-2 bg-yellow-100 p-6 rounded-3xl shadow-lg text-center">
+                    <h3 class="text-xl font-bold text-yellow-800 mb-2">💡 Pembelajaran Mendalam</h3>
+                    <p class="text-lg text-gray-800">
+                        Aplikasi ini membantumu <strong>Memahami</strong> konsep alam, <strong>Mengaplikasikan</strong> pengetahuan lewat permainan, dan <strong>Merefleksikan</strong> peranmu sebagai penjaga ekosistem!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-map" class="screen bg-gradient-to-b from-blue-200 to-green-400 p-8 pt-24">
+            <h2 class="text-4xl font-black text-center text-white drop-shadow-md mb-2">Peta Petualangan Belajar</h2>
+            <div class="text-center mb-8"><span class="bg-white/70 px-4 py-1 rounded-full font-bold text-green-800">Pilih misi untuk memulai!</span></div>
+            
+            <div class="relative max-w-4xl mx-auto h-[60vh] flex flex-col justify-around items-center">
+                <!-- SVG Jalur Peta (Sederhana) -->
+                <svg class="absolute inset-0 w-full h-full" style="z-index: 0;" preserveAspectRatio="none">
+                    <path d="M100,50 C200,50 300,150 400,150 C500,150 600,50 700,50 C800,50 850,200 800,250 C700,300 300,250 200,300 C100,350 100,450 200,450 C300,450 500,400 700,450" fill="none" stroke="#fff" stroke-width="15" stroke-dasharray="20 20" stroke-linecap="round"/>
+                </svg>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full z-10 px-8">
+                    <!-- Tombol Dunia -->
+                    <button class="bg-white rounded-3xl p-4 shadow-xl border-4 border-green-500 hover:scale-105 transition-transform" onclick="navTo('screen-w1')">
+                        <div class="text-4xl mb-2">🔍🌿</div>
+                        <h3 class="font-bold text-xl text-green-700">1. Eksplorasi</h3>
+                        <p class="text-sm text-gray-600">Biotik & Abiotik</p>
+                    </button>
+                    <button class="bg-white rounded-3xl p-4 shadow-xl border-4 border-yellow-500 hover:scale-105 transition-transform" onclick="navTo('screen-w2')">
+                        <div class="text-4xl mb-2">🔗🐍</div>
+                        <h3 class="font-bold text-xl text-yellow-700">2. Rantai Makanan</h3>
+                        <p class="text-sm text-gray-600">Aliran Energi</p>
+                    </button>
+                    <button class="bg-white rounded-3xl p-4 shadow-xl border-4 border-blue-500 hover:scale-105 transition-transform" onclick="navTo('screen-w3')">
+                        <div class="text-4xl mb-2">🕸️🦅</div>
+                        <h3 class="font-bold text-xl text-blue-700">3. Jaring Kehidupan</h3>
+                        <p class="text-sm text-gray-600">Hubungan Kompleks</p>
+                    </button>
+                    <button class="bg-white rounded-3xl p-4 shadow-xl border-4 border-purple-500 hover:scale-105 transition-transform md:col-start-1 md:col-end-3" onclick="navTo('screen-w4')">
+                        <div class="text-4xl mb-2">🧪📉</div>
+                        <h3 class="font-bold text-xl text-purple-700">4. Lab Keseimbangan</h3>
+                        <p class="text-sm text-gray-600">Simulasi Populasi</p>
+                    </button>
+                    <button class="bg-white rounded-3xl p-4 shadow-xl border-4 border-red-500 hover:scale-105 transition-transform" onclick="navTo('screen-w5')">
+                        <div class="text-4xl mb-2">🛡️🌍</div>
+                        <h3 class="font-bold text-xl text-red-700">5. Penjaga Alam</h3>
+                        <p class="text-sm text-gray-600">Studi Kasus</p>
+                    </button>
+                </div>
+                
+                <div class="mt-8 flex gap-4 z-10">
+                    <button class="btn-large btn-yellow" onclick="navTo('screen-quiz')">📝 Kuis Evaluasi</button>
+                    <button class="btn-large bg-pink-400 text-white" onclick="navTo('screen-reflection')">💭 Refleksi</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-w1" class="screen bg-gradient-to-b from-green-50 to-green-200 p-8 pt-24">
+            <div class="max-w-6xl mx-auto w-full h-full flex flex-col">
+                <div class="text-center mb-4">
+                    <h2 class="text-4xl font-black text-green-800">Dunia 1: Eksplorasi Ekosistem</h2>
+                    <p class="text-lg text-gray-700">Ketuk benda untuk melihat info, lalu kelompokkan!</p>
+                </div>
+                
+                <div class="flex-1 bg-white rounded-3xl shadow-xl p-6 flex flex-col md:flex-row gap-6">
+                    <!-- Area Objek -->
+                    <div class="flex-1 border-4 border-blue-200 rounded-2xl p-4 bg-blue-50">
+                        <h3 class="text-xl font-bold text-center mb-4">Objek Ekosistem Sawah</h3>
+                        <div class="flex flex-wrap gap-4 justify-center" id="w1-items">
+                            <!-- Items dinamis dimuat via JS -->
+                        </div>
+                        <div id="w1-info-panel" class="mt-6 p-4 bg-yellow-100 rounded-xl hidden text-center border-2 border-yellow-300">
+                            <h4 id="w1-info-title" class="font-bold text-xl mb-1"></h4>
+                            <p id="w1-info-desc" class="text-gray-700"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Area Pengelompokan (Drop/Click Zones) -->
+                    <div class="flex-1 flex flex-col gap-4">
+                        <div class="bg-green-100 p-4 rounded-2xl border-4 border-green-300 flex-1 flex flex-col">
+                            <h3 class="text-xl font-bold text-center text-green-800 mb-2">🌿 Komponen Biotik (Hidup)</h3>
+                            <div id="zone-biotik" class="drop-zone flex-1" onclick="w1PlaceItem('biotik')">Ketuk objek, lalu ketuk area ini</div>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-2xl border-4 border-gray-300 flex-1 flex flex-col">
+                            <h3 class="text-xl font-bold text-center text-gray-800 mb-2">🪨 Komponen Abiotik (Tak Hidup)</h3>
+                            <div id="zone-abiotik" class="drop-zone flex-1" onclick="w1PlaceItem('abiotik')">Ketuk objek, lalu ketuk area ini</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button class="btn-large btn-green hidden" id="w1-next-btn" onclick="navTo('screen-map')">Misi Selesai! Kembali ke Peta</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-w2" class="screen bg-gradient-to-b from-yellow-50 to-yellow-200 p-8 pt-24">
+            <div class="max-w-6xl mx-auto w-full h-full flex flex-col">
+                <div class="text-center mb-4">
+                    <h2 class="text-4xl font-black text-yellow-800">Dunia 2: Rantai Makanan</h2>
+                    <p class="text-lg text-gray-700">Susunlah organisme menjadi rantai makanan yang benar! (Arah panah = arah aliran energi)</p>
+                </div>
+                
+                <div class="bg-white rounded-3xl shadow-xl p-6 flex-1 flex flex-col">
+                    <div class="text-center mb-4 bg-yellow-100 p-3 rounded-xl border border-yellow-300">
+                        <p class="font-bold">Matahari (☀️) memberikan energi ke Tumbuhan (Produsen). Hewan yang dimakan memberikan energinya ke hewan yang memakan (Konsumen).</p>
+                    </div>
+
+                    <!-- Area Sumber -->
+                    <div class="flex justify-center gap-4 mb-8 p-4 bg-gray-50 rounded-xl" id="w2-source">
+                        <!-- Dimuat JS -->
+                    </div>
+
+                    <!-- Area Jawaban -->
+                    <div class="flex items-center justify-center flex-wrap gap-2 md:gap-4 mt-8">
+                        <div class="w2-slot card-item bg-green-50 border-4 border-dashed border-green-300 w-24 h-32 md:w-32 md:h-40 flex items-center justify-center text-3xl" onclick="w2Place(0)">1</div>
+                        <div class="text-3xl text-orange-500 font-bold">➔</div>
+                        <div class="w2-slot card-item bg-yellow-50 border-4 border-dashed border-yellow-300 w-24 h-32 md:w-32 md:h-40 flex items-center justify-center text-3xl" onclick="w2Place(1)">2</div>
+                        <div class="text-3xl text-orange-500 font-bold">➔</div>
+                        <div class="w2-slot card-item bg-orange-50 border-4 border-dashed border-orange-300 w-24 h-32 md:w-32 md:h-40 flex items-center justify-center text-3xl" onclick="w2Place(2)">3</div>
+                        <div class="text-3xl text-orange-500 font-bold">➔</div>
+                        <div class="w2-slot card-item bg-red-50 border-4 border-dashed border-red-300 w-24 h-32 md:w-32 md:h-40 flex items-center justify-center text-3xl" onclick="w2Place(3)">4</div>
+                        <div class="text-3xl text-orange-500 font-bold">➔</div>
+                        <div class="w2-slot card-item bg-purple-50 border-4 border-dashed border-purple-300 w-24 h-32 md:w-32 md:h-40 flex items-center justify-center text-3xl" onclick="w2Place(4)">5</div>
+                    </div>
+
+                    <div class="text-center mt-auto pt-8 flex justify-center gap-4">
+                        <button class="btn-large bg-gray-400 text-white" onclick="w2Reset()">Ulangi</button>
+                        <button class="btn-large btn-green" onclick="w2Check()">Periksa Jawaban</button>
+                    </div>
+                    <div id="w2-feedback" class="mt-4 text-center text-xl font-bold min-h-[2rem]"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-w3" class="screen bg-gradient-to-b from-blue-50 to-blue-200 p-8 pt-24 relative">
+            <div class="max-w-6xl mx-auto w-full h-full flex flex-col z-20 relative">
+                <div class="text-center mb-4">
+                    <h2 class="text-4xl font-black text-blue-800">Dunia 3: Jaring-Jaring Makanan</h2>
+                    <p class="text-lg text-gray-700 bg-white/70 inline-block px-4 py-1 rounded-full">Hubungkan hewan-hewan ini! Ketuk organisme yang dimakan (sumber energi), lalu ketuk pemangsanya.</p>
+                </div>
+                
+                <div class="bg-white/90 rounded-3xl shadow-xl p-6 flex-1 relative overflow-hidden flex flex-col items-center">
+                    <svg id="w3-svg-canvas" class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 1;"></svg>
+                    
+                    <div class="w-full max-w-3xl flex-1 relative grid grid-cols-3 gap-8 p-8" id="w3-grid" style="z-index: 2;">
+                        <!-- Organisme (Posisi diset via CSS Grid) -->
+                        <div class="w3-node flex flex-col items-center cursor-pointer p-2 rounded-xl hover:bg-gray-100 transition col-start-2 row-start-3" data-id="padi" onclick="w3ClickNode('padi')">
+                            <span class="emoji-lg">🌾</span><span class="font-bold bg-green-200 px-2 rounded">Padi</span>
+                        </div>
+                        <div class="w3-node flex flex-col items-center cursor-pointer p-2 rounded-xl hover:bg-gray-100 transition col-start-1 row-start-2" data-id="tikus" onclick="w3ClickNode('tikus')">
+                            <span class="emoji-lg">🐀</span><span class="font-bold bg-yellow-200 px-2 rounded">Tikus</span>
+                        </div>
+                        <div class="w3-node flex flex-col items-center cursor-pointer p-2 rounded-xl hover:bg-gray-100 transition col-start-2 row-start-2" data-id="belalang" onclick="w3ClickNode('belalang')">
+                            <span class="emoji-lg">🦗</span><span class="font-bold bg-yellow-200 px-2 rounded">Belalang</span>
+                        </div>
+                        <div class="w3-node flex flex-col items-center cursor-pointer p-2 rounded-xl hover:bg-gray-100 transition col-start-3 row-start-2" data-id="katak" onclick="w3ClickNode('katak')">
+                            <span class="emoji-lg">🐸</span><span class="font-bold bg-orange-200 px-2 rounded">Katak</span>
+                        </div>
+                        <div class="w3-node flex flex-col items-center cursor-pointer p-2 rounded-xl hover:bg-gray-100 transition col-start-1 row-start-1" data-id="ular" onclick="w3ClickNode('ular')">
+                            <span class="emoji-lg">🐍</span><span class="font-bold bg-red-200 px-2 rounded">Ular</span>
+                        </div>
+                        <div class="w3-node flex flex-col items-center cursor-pointer p-2 rounded-xl hover:bg-gray-100 transition col-start-3 row-start-1" data-id="elang" onclick="w3ClickNode('elang')">
+                            <span class="emoji-lg">🦅</span><span class="font-bold bg-purple-200 px-2 rounded">Elang</span>
+                        </div>
+                    </div>
+                    
+                    <div id="w3-feedback" class="mt-2 text-center text-xl font-bold min-h-[2rem] bg-white p-2 rounded-xl shadow">Target: Temukan 5 hubungan makanan yang benar!</div>
+                    <button class="btn-large btn-blue mt-4" onclick="w3Clear()">Bersihkan Garis</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-w4" class="screen bg-gradient-to-b from-purple-50 to-purple-200 p-8 pt-24">
+            <div class="max-w-6xl mx-auto w-full h-full flex flex-col">
+                <div class="text-center mb-4">
+                    <h2 class="text-4xl font-black text-purple-800">Dunia 4: Lab Keseimbangan Ekosistem</h2>
+                    <p class="text-lg text-gray-700">Simulasikan apa yang terjadi jika populasi satu makhluk hidup berubah tajam.</p>
+                </div>
+                
+                <div class="bg-white rounded-3xl shadow-xl p-6 flex-1 flex flex-col md:flex-row gap-6">
+                    <!-- Panel Skenario -->
+                    <div class="w-full md:w-1/3 flex flex-col gap-4">
+                        <h3 class="font-bold text-xl bg-purple-100 p-3 rounded-xl">Pilih Skenario:</h3>
+                        <button class="w4-btn p-4 rounded-xl border-2 border-purple-300 text-left hover:bg-purple-50 font-bold" onclick="w4Simulate('ular_turun')">A. Ular Banyak Diburu 📉</button>
+                        <button class="w4-btn p-4 rounded-xl border-2 border-purple-300 text-left hover:bg-purple-50 font-bold" onclick="w4Simulate('katak_turun')">B. Katak Terkena Racun 📉</button>
+                        <button class="w4-btn p-4 rounded-xl border-2 border-purple-300 text-left hover:bg-purple-50 font-bold" onclick="w4Simulate('pestisida')">C. Pestisida Berlebih ☠️</button>
+                        <button class="btn-large bg-gray-200 text-gray-800 mt-auto" onclick="w4Reset()">🔄 Pulihkan Kondisi Awal</button>
+                    </div>
+                    
+                    <!-- Panel Visualisasi -->
+                    <div class="flex-1 bg-green-50 rounded-2xl border-4 border-green-200 p-6 flex flex-col relative overflow-hidden">
+                        <h3 class="font-bold text-2xl text-center mb-6">Kondisi Sawah Saat Ini</h3>
+                        
+                        <div class="flex justify-around items-end flex-1 pb-8 border-b-2 border-gray-300">
+                            <!-- Bar Chart Sederhana menggunakan div -->
+                            <div class="flex flex-col items-center justify-end h-full w-1/4">
+                                <div id="w4-bar-padi" class="bg-green-500 w-16 transition-all duration-1000 rounded-t-lg flex items-end justify-center pb-2 text-white font-bold" style="height: 50%;">Normal</div>
+                                <span class="text-3xl mt-2">🌾</span><span class="font-bold text-sm">Padi</span>
+                            </div>
+                            <div class="flex flex-col items-center justify-end h-full w-1/4">
+                                <div id="w4-bar-hama" class="bg-yellow-500 w-16 transition-all duration-1000 rounded-t-lg flex items-end justify-center pb-2 text-white font-bold" style="height: 50%;">Normal</div>
+                                <span class="text-3xl mt-2">🦗🐀</span><span class="font-bold text-sm">Hama</span>
+                            </div>
+                            <div class="flex flex-col items-center justify-end h-full w-1/4">
+                                <div id="w4-bar-predator" class="bg-red-500 w-16 transition-all duration-1000 rounded-t-lg flex items-end justify-center pb-2 text-white font-bold" style="height: 50%;">Normal</div>
+                                <span class="text-3xl mt-2">🐸🐍</span><span class="font-bold text-sm">Predator</span>
+                            </div>
+                        </div>
+                        
+                        <div id="w4-explanation" class="mt-4 p-4 bg-white rounded-xl shadow-md border-l-8 border-purple-400 min-h-[6rem] text-lg font-medium">
+                            Semua populasi dalam keadaan seimbang. Mari kita lihat apa yang terjadi jika salah satu berubah.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-w5" class="screen bg-gradient-to-b from-red-50 to-red-200 p-8 pt-24">
+             <div class="max-w-4xl mx-auto w-full h-full flex flex-col">
+                <div class="text-center mb-6">
+                    <h2 class="text-4xl font-black text-red-800">Dunia 5: Penjaga Ekosistem</h2>
+                    <p class="text-lg text-gray-700">Selesaikan kasus masalah lingkungan di bawah ini.</p>
+                </div>
+                
+                <div class="bg-white rounded-3xl shadow-xl p-8 flex-1 flex flex-col scrollable-content">
+                    <div class="bg-orange-100 p-6 rounded-2xl border-l-8 border-orange-500 mb-6">
+                        <h3 class="font-bold text-xl mb-2">📜 Laporan Kasus:</h3>
+                        <p class="text-lg leading-relaxed">"Petani mengeluhkan padi yang rusak karena hama. Mereka menggunakan pestisida sangat banyak. Akibatnya, banyak serangga mati, namun burung-burung juga mulai menghilang. Warga khawatir sawah akan rusak."</p>
+                    </div>
+
+                    <div id="w5-step-1" class="w5-step">
+                        <h4 class="font-bold text-2xl text-blue-700 mb-4">Misi 1: Identifikasi Masalah Utama</h4>
+                        <p class="mb-4 text-lg">Mengapa burung-burung ikut menghilang padahal pestisida untuk serangga hama?</p>
+                        <div class="flex flex-col gap-3">
+                            <button class="btn-w5 text-left p-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:bg-blue-50 text-lg" onclick="w5Check(1, false)">A. Karena burung tidak suka bau pestisida.</button>
+                            <button class="btn-w5 text-left p-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:bg-blue-50 text-lg" onclick="w5Check(1, true)">B. Karena burung pemakan serangga kehilangan sumber makanannya, dan mungkin memakan serangga beracun.</button>
+                        </div>
+                    </div>
+
+                    <div id="w5-step-2" class="w5-step hidden mt-6">
+                        <h4 class="font-bold text-2xl text-green-700 mb-4">Misi 2: Solusi Penjaga Alam</h4>
+                        <p class="mb-4 text-lg">Tindakan apa yang paling tepat untuk memperbaiki ekosistem sawah?</p>
+                        <div class="flex flex-col gap-3">
+                            <button class="btn-w5 text-left p-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:bg-green-50 text-lg" onclick="w5Check(2, false)">A. Membasmi semua hewan di sawah agar hanya ada padi.</button>
+                            <button class="btn-w5 text-left p-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:bg-green-50 text-lg" onclick="w5Check(2, true)">B. Menggunakan pestisida alami secara bijak dan membiarkan predator alami (seperti katak dan burung) hidup.</button>
+                        </div>
+                    </div>
+
+                    <div id="w5-success" class="hidden mt-8 text-center bg-green-100 p-6 rounded-2xl border-4 border-green-400">
+                        <div class="text-6xl mb-4">🏅</div>
+                        <h3 class="text-3xl font-black text-green-800 mb-2">Selamat! Kamu Mendapat Lencana Penjaga Ekosistem</h3>
+                        <p class="text-xl">Kamu telah memahami bahwa setiap tindakan manusia dapat memengaruhi jaring-jaring kehidupan.</p>
+                        <button class="btn-large btn-green mt-6" onclick="navTo('screen-map')">Kembali ke Peta</button>
+                    </div>
+                </div>
+             </div>
+        </div>
+
+        <div id="screen-quiz" class="screen bg-gradient-to-br from-indigo-100 to-purple-200 p-8 pt-24">
+            <div class="max-w-4xl mx-auto w-full h-full flex flex-col bg-white rounded-3xl shadow-2xl overflow-hidden">
+                <!-- Header Kuis -->
+                <div class="bg-indigo-600 text-white p-6 flex justify-between items-center">
+                    <h2 class="text-3xl font-black">Evaluasi IPAS</h2>
+                    <div class="text-xl font-bold bg-indigo-800 px-4 py-2 rounded-full">Soal: <span id="quiz-progress">1/15</span></div>
+                </div>
+                
+                <!-- Area Soal -->
+                <div class="flex-1 p-8 overflow-y-auto" id="quiz-area">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6" id="quiz-question">Pertanyaan dimuat di sini...</h3>
+                    <div class="flex flex-col gap-4" id="quiz-options">
+                        <!-- Opsi dinamis -->
+                    </div>
+                    
+                    <div id="quiz-feedback-box" class="mt-6 p-4 rounded-xl hidden">
+                        <p id="quiz-feedback-text" class="text-lg font-bold"></p>
+                        <button id="quiz-next-btn" class="mt-4 px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hidden" onclick="quizNext()">Lanjut ➔</button>
+                    </div>
+                </div>
+
+                <!-- Area Hasil Akhir -->
+                <div class="flex-1 p-8 hidden flex-col items-center justify-center text-center" id="quiz-result-area">
+                    <h2 class="text-4xl font-black text-indigo-800 mb-4">Hasil Evaluasi</h2>
+                    <div class="text-8xl mb-4" id="quiz-medal">🏆</div>
+                    <p class="text-2xl mb-2">Nilai Akhir: <span class="font-bold text-4xl text-green-600" id="quiz-score">100</span></p>
+                    <p class="text-xl text-gray-600 mb-8">Benar: <span id="quiz-correct">15</span> | Salah: <span id="quiz-wrong">0</span></p>
+                    <div class="flex gap-4">
+                        <button class="btn-large bg-gray-200" onclick="quizStart()">Ulangi Kuis</button>
+                        <button class="btn-large btn-green" onclick="navTo('screen-map')">Kembali ke Peta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-reflection" class="screen bg-pink-50 p-8 pt-24">
+            <div class="max-w-4xl mx-auto w-full flex flex-col items-center">
+                <h2 class="text-4xl font-black text-pink-600 mb-6">💭 Refleksi Belajar</h2>
+                <div class="bg-white p-8 rounded-3xl shadow-xl w-full">
+                    <p class="text-xl mb-6 font-bold text-gray-700">Mari renungkan apa yang sudah kita pelajari hari ini:</p>
+                    <div class="space-y-6 text-lg">
+                        <div>
+                            <p class="font-bold text-pink-500">✨ Hari ini saya memahami bahwa...</p>
+                            <textarea class="w-full mt-2 p-3 border-2 border-pink-200 rounded-xl focus:border-pink-500 outline-none" rows="2" placeholder="Tuliskan pemahamanmu..."></textarea>
+                        </div>
+                        <div>
+                            <p class="font-bold text-blue-500">🌍 Tindakan nyataku untuk menjaga lingkungan adalah...</p>
+                            <textarea class="w-full mt-2 p-3 border-2 border-blue-200 rounded-xl focus:border-blue-500 outline-none" rows="2" placeholder="Tulis janjimu untuk bumi..."></textarea>
+                        </div>
+                    </div>
+                    <button class="btn-large bg-pink-500 text-white mt-8 w-full" onclick="navTo('screen-map')">Simpan Refleksi & Kembali</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-profile" class="screen bg-gray-800 text-white p-8 pt-24 flex items-center justify-center">
+            <div class="max-w-2xl text-center bg-gray-900 p-10 rounded-3xl shadow-2xl border-4 border-gray-700 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500"></div>
+                <div class="text-7xl mb-6">👨‍🏫</div>
+                <h2 class="text-4xl font-black mb-2 text-yellow-400">Dindo Noto Sastro, S.Pd.</h2>
+                <p class="text-xl text-gray-300 mb-6">Pengembang Media Pembelajaran Interaktif</p>
+                <div class="bg-gray-800 p-4 rounded-xl text-left border border-gray-600 mb-8">
+                    <h3 class="font-bold text-green-400 mb-2">Informasi Aplikasi:</h3>
+                    <p><strong>Judul:</strong> Harmoni dalam Ekosistem</p>
+                    <p><strong>Materi:</strong> IPAS Fase C (Kelas V SD) - Rantai & Jaring-Jaring Makanan</p>
+                    <p><strong>Fitur:</strong> Pembelajaran Mendalam, Simulasi, Evaluasi Mandiri.</p>
+                </div>
+                <button class="btn-large btn-green w-full" onclick="goBack()">Kembali</button>
+            </div>
+        </div>
+        
+    </div> <!-- End app-container -->
+
+    <script>
+        // --- STATE MANAGEMENT ---
+        let currentScreen = 'screen-home';
+        let previousScreen = '';
+        let isAudioEnabled = true;
+        
+        // --- AUDIO SYNTHESIS (Tidak butuh aset eksternal) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!isAudioEnabled) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now); // A4
+                osc.frequency.setValueAtTime(554, now + 0.1); // C#5
+                osc.frequency.setValueAtTime(659, now + 0.2); // E5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.45); // C6
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.8);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            }
+        }
+
+        // --- NAVIGATION LOGIC ---
+        function navTo(screenId) {
+            playSound('click');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            previousScreen = currentScreen;
+            currentScreen = screenId;
+            document.getElementById(screenId).classList.add('active');
+            
+            // Atur tombol kembali
+            const btnBack = document.getElementById('btn-back');
+            if (screenId === 'screen-home') {
+                btnBack.style.display = 'none';
+            } else {
+                btnBack.style.display = 'flex';
+            }
+            
+            // Inisialisasi layar khusus jika perlu
+            if (screenId === 'screen-w1') initW1();
+            if (screenId === 'screen-w2') initW2();
+            if (screenId === 'screen-w3') initW3();
+            if (screenId === 'screen-w4') w4Reset();
+            if (screenId === 'screen-quiz' && quizState.current === 0) quizStart();
+        }
+
+        function goBack() {
+            if (currentScreen === 'screen-quiz') {
+                if(confirm("Yakin ingin keluar dari kuis?")) navTo('screen-map');
+            } else if (previousScreen && previousScreen !== currentScreen) {
+                navTo(previousScreen);
+            } else {
+                navTo('screen-home');
+            }
+        }
+
+        function startGame() {
+            initAudio();
+            navTo('screen-map');
+        }
+
+        function toggleFullscreen() {
+            playSound('click');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function toggleMute() {
+            isAudioEnabled = !isAudioEnabled;
+            document.getElementById('btn-mute').innerHTML = isAudioEnabled ? '🔊' : '🔇';
+            if(isAudioEnabled) playSound('click');
+        }
+
+        // --- STREAMING_CHUNK:Logika Dunia 1 (Biotik & Abiotik)... ---
+        const w1Data = [
+            { id: 'padi', icon: '🌾', name: 'Padi', type: 'biotik', desc: 'Tumbuhan, Produsen. Menghasilkan makanan sendiri.' },
+            { id: 'katak', icon: '🐸', name: 'Katak', type: 'biotik', desc: 'Hewan, Konsumen. Memakan serangga.' },
+            { id: 'matahari', icon: '☀️', name: 'Matahari', type: 'abiotik', desc: 'Sumber energi utama untuk fotosintesis tumbuhan.' },
+            { id: 'air', icon: '💧', name: 'Air', type: 'abiotik', desc: 'Benda mati yang sangat penting bagi semua makhluk hidup.' },
+            { id: 'batu', icon: '🪨', name: 'Batu', type: 'abiotik', desc: 'Komponen fisik yang bisa menjadi tempat persembunyian hewan.' },
+            { id: 'belalang', icon: '🦗', name: 'Belalang', type: 'biotik', desc: 'Hewan pemakan tumbuhan (Konsumen Tingkat I).' }
+        ];
+        let w1Selected = null;
+        let w1CorrectCount = 0;
+
+        function initW1() {
+            const container = document.getElementById('w1-items');
+            container.innerHTML = '';
+            document.getElementById('zone-biotik').innerHTML = 'Ketuk objek, lalu ketuk area ini';
+            document.getElementById('zone-abiotik').innerHTML = 'Ketuk objek, lalu ketuk area ini';
+            document.getElementById('w1-next-btn').classList.add('hidden');
+            w1CorrectCount = 0;
+            w1Selected = null;
+            document.getElementById('w1-info-panel').classList.add('hidden');
+
+            // Acak
+            [...w1Data].sort(() => Math.random() - 0.5).forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'card-item text-4xl w-20 h-24 flex flex-col items-center justify-center relative bg-white';
+                el.innerHTML = `<span>${item.icon}</span><span class="text-xs font-bold mt-1">${item.name}</span>`;
+                el.id = `w1-${item.id}`;
+                el.onclick = () => w1Select(item.id, el);
+                container.appendChild(el);
+            });
+        }
+
+        function w1Select(id, element) {
+            playSound('click');
+            document.querySelectorAll('#w1-items .card-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            w1Selected = w1Data.find(i => i.id === id);
+            
+            // Tampil Info
+            const panel = document.getElementById('w1-info-panel');
+            panel.classList.remove('hidden');
+            document.getElementById('w1-info-title').innerText = `${w1Selected.icon} ${w1Selected.name}`;
+            document.getElementById('w1-info-desc').innerText = w1Selected.desc;
+        }
+
+        function w1PlaceItem(targetType) {
+            if (!w1Selected) return;
+            
+            if (w1Selected.type === targetType) {
+                playSound('success');
+                const el = document.getElementById(`w1-${w1Selected.id}`);
+                const targetZone = document.getElementById(`zone-${targetType}`);
+                
+                // Hapus tulisan instruksi jika ada
+                if(targetZone.innerHTML.includes('Ketuk objek')) targetZone.innerHTML = '';
+                
+                el.onclick = null; // disable click
+                el.classList.remove('selected');
+                el.style.transform = 'scale(0.8)';
+                targetZone.appendChild(el);
+                
+                w1Selected = null;
+                w1CorrectCount++;
+                document.getElementById('w1-info-panel').classList.add('hidden');
+
+                if (w1CorrectCount === w1Data.length) {
+                    playSound('win');
+                    document.getElementById('w1-next-btn').classList.remove('hidden');
+                }
+            } else {
+                playSound('error');
+                const panel = document.getElementById('w1-info-panel');
+                panel.classList.remove('bg-yellow-100', 'border-yellow-300');
+                panel.classList.add('bg-red-100', 'border-red-400');
+                document.getElementById('w1-info-desc').innerHTML = `<strong>Ups salah!</strong> ${w1Selected.name} bukan komponen ${targetType}. Coba lagi!`;
+                
+                setTimeout(() => {
+                    panel.classList.remove('bg-red-100', 'border-red-400');
+                    panel.classList.add('bg-yellow-100', 'border-yellow-300');
+                    document.getElementById('w1-info-desc').innerText = w1Selected.desc;
+                }, 2000);
+            }
+        }
+
+        // --- STREAMING_CHUNK:Logika Dunia 2 (Rantai Makanan)... ---
+        const w2Data = [
+            { id: 'padi', icon: '🌾', role: 'Produsen' },
+            { id: 'belalang', icon: '🦗', role: 'Konsumen I' },
+            { id: 'katak', icon: '🐸', role: 'Konsumen II' },
+            { id: 'ular', icon: '🐍', role: 'Konsumen III' },
+            { id: 'elang', icon: '🦅', role: 'Konsumen Puncak' }
+        ];
+        let w2SelectedEl = null;
+        let w2Slots = [null, null, null, null, null];
+
+        function initW2() {
+            const sourceContainer = document.getElementById('w2-source');
+            sourceContainer.innerHTML = '';
+            w2Slots = [null, null, null, null, null];
+            w2SelectedEl = null;
+            document.getElementById('w2-feedback').innerText = '';
+            document.getElementById('w2-feedback').className = 'mt-4 text-center text-xl font-bold min-h-[2rem]';
+
+            // Reset slots
+            document.querySelectorAll('.w2-slot').forEach((slot, index) => {
+                slot.innerHTML = index + 1;
+                slot.classList.remove('border-blue-500', 'bg-blue-100');
+            });
+
+            // Acak
+            [...w2Data].sort(() => Math.random() - 0.5).forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'card-item text-5xl w-24 h-32 flex flex-col items-center justify-center bg-white shadow-md border-2 border-gray-200 cursor-pointer';
+                el.innerHTML = `<span>${item.icon}</span><span class="text-[10px] font-bold mt-2 uppercase text-gray-500">${item.role}</span>`;
+                el.dataset.id = item.id;
+                el.onclick = () => w2SelectSource(el);
+                sourceContainer.appendChild(el);
+            });
+        }
+
+        function w2SelectSource(el) {
+            playSound('click');
+            document.querySelectorAll('#w2-source .card-item').forEach(e => e.classList.remove('selected', 'border-accent'));
+            el.classList.add('selected');
+            w2SelectedEl = el;
+        }
+
+        function w2Place(index) {
+            if (!w2SelectedEl) return;
+            playSound('click');
+            const slot = document.querySelectorAll('.w2-slot')[index];
+            
+            // Pindahkan elemen
+            w2SelectedEl.onclick = () => {
+                 // Balikkan ke source
+                 document.getElementById('w2-source').appendChild(w2SelectedEl);
+                 w2Slots[index] = null;
+                 slot.innerHTML = index + 1;
+                 w2SelectedEl.onclick = () => w2SelectSource(w2SelectedEl);
+            };
+            
+            slot.innerHTML = '';
+            slot.appendChild(w2SelectedEl);
+            w2SelectedEl.classList.remove('selected');
+            w2Slots[index] = w2SelectedEl.dataset.id;
+            w2SelectedEl = null;
+        }
+
+        function w2Reset() {
+            playSound('click');
+            initW2();
+        }
+
+        function w2Check() {
+            const correctOrder = ['padi', 'belalang', 'katak', 'ular', 'elang'];
+            const feedback = document.getElementById('w2-feedback');
+            
+            if (w2Slots.includes(null)) {
+                playSound('error');
+                feedback.innerText = "Lengkapi semua kotak terlebih dahulu!";
+                feedback.classList.add('text-red-500');
+                return;
+            }
+
+            let isCorrect = true;
+            for(let i=0; i<5; i++) {
+                if (w2Slots[i] !== correctOrder[i]) isCorrect = false;
+            }
+
+            if (isCorrect) {
+                playSound('win');
+                feedback.innerHTML = "Luar Biasa! Rantai makanan tersusun dengan benar.<br><span class='text-sm text-gray-600'>(Panah menunjukkan energi dari padi mengalir hingga ke elang)</span>";
+                feedback.className = 'mt-4 text-center text-2xl font-bold min-h-[2rem] text-green-600 bg-green-100 p-2 rounded';
+            } else {
+                playSound('error');
+                feedback.innerText = "Urutan belum tepat. Ingat: Produsen ➔ Herbivora ➔ Karnivora. Coba periksa kembali!";
+                feedback.className = 'mt-4 text-center text-xl font-bold min-h-[2rem] text-red-600 bg-red-100 p-2 rounded';
+            }
+        }
+
+        // --- STREAMING_CHUNK:Logika Dunia 3 (Jaring-Jaring Makanan)... ---
+        // Valid connections (from -> to, energy flow)
+        const validLinks = [
+            { from: 'padi', to: 'tikus' },
+            { from: 'padi', to: 'belalang' },
+            { from: 'belalang', to: 'katak' },
+            { from: 'tikus', to: 'ular' },
+            { from: 'tikus', to: 'elang' },
+            { from: 'katak', to: 'ular' },
+            { from: 'ular', to: 'elang' }
+        ];
+        let w3SelectedNode = null;
+        let w3DrawnLinks = [];
+
+        function initW3() {
+            w3Clear();
+        }
+
+        function w3ClickNode(id) {
+            playSound('click');
+            const node = document.querySelector(`.w3-node[data-id="${id}"]`);
+            
+            if (!w3SelectedNode) {
+                // Pilih sebagai sumber
+                w3SelectedNode = id;
+                node.classList.add('bg-blue-100', 'ring-4', 'ring-blue-400');
+                document.getElementById('w3-feedback').innerText = "Pilih organisme yang memakannya...";
+            } else {
+                // Pilih target
+                if (w3SelectedNode !== id) {
+                    w3CheckLink(w3SelectedNode, id);
+                }
+                // Deselect
+                document.querySelectorAll('.w3-node').forEach(n => n.classList.remove('bg-blue-100', 'ring-4', 'ring-blue-400'));
+                w3SelectedNode = null;
+            }
+        }
+
+        function w3CheckLink(from, to) {
+            const isValid = validLinks.some(l => l.from === from && l.to === to);
+            const feedback = document.getElementById('w3-feedback');
+            
+            // Cek apakah sudah digambar
+            const alreadyDrawn = w3DrawnLinks.some(l => l.from === from && l.to === to);
+            if (alreadyDrawn) return;
+
+            if (isValid) {
+                playSound('success');
+                w3DrawLine(from, to);
+                w3DrawnLinks.push({from, to});
+                feedback.innerText = `Benar! Energi mengalir dari ${from} ke ${to}.`;
+                feedback.className = "mt-2 text-center text-xl font-bold min-h-[2rem] bg-green-100 text-green-700 p-2 rounded-xl shadow";
+                
+                if (w3DrawnLinks.length >= 5) {
+                    setTimeout(() => {
+                        playSound('win');
+                        feedback.innerText = "Hebat! Kamu telah merangkai jaring-jaring makanan yang kompleks!";
+                    }, 1000);
+                }
+            } else {
+                playSound('error');
+                feedback.innerText = `Ups! ${to} tidak memakan ${from} secara alami di ekosistem ini.`;
+                feedback.className = "mt-2 text-center text-xl font-bold min-h-[2rem] bg-red-100 text-red-700 p-2 rounded-xl shadow";
+            }
+        }
+
+        function w3DrawLine(from, to) {
+            const svg = document.getElementById('w3-svg-canvas');
+            const elFrom = document.querySelector(`.w3-node[data-id="${from}"]`);
+            const elTo = document.querySelector(`.w3-node[data-id="${to}"]`);
+            
+            // Hitung posisi relatif terhadap grid
+            const gridRect = document.getElementById('w3-grid').getBoundingClientRect();
+            const fromRect = elFrom.getBoundingClientRect();
+            const toRect = elTo.getBoundingClientRect();
+            
+            // Titik tengah elemen relatif thd SVG
+            const x1 = (fromRect.left - gridRect.left) + fromRect.width / 2;
+            const y1 = (fromRect.top - gridRect.top) + fromRect.height / 2;
+            const x2 = (toRect.left - gridRect.left) + toRect.width / 2;
+            const y2 = (toRect.top - gridRect.top) + toRect.height / 2;
+
+            // Buat panah SVG (menggunakan defs marker jika belum ada)
+            if (!document.getElementById('arrowhead')) {
+                const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+                defs.innerHTML = `
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="25" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b" />
+                    </marker>
+                `;
+                svg.appendChild(defs);
+            }
+
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1);
+            line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2);
+            line.setAttribute("y2", y2);
+            line.setAttribute("class", "food-web-arrow");
+            line.setAttribute("marker-end", "url(#arrowhead)");
+            
+            svg.appendChild(line);
+        }
+
+        function w3Clear() {
+            playSound('click');
+            const svg = document.getElementById('w3-svg-canvas');
+            svg.innerHTML = '';
+            w3DrawnLinks = [];
+            w3SelectedNode = null;
+            document.querySelectorAll('.w3-node').forEach(n => n.classList.remove('bg-blue-100', 'ring-4', 'ring-blue-400'));
+            document.getElementById('w3-feedback').innerText = "Target: Temukan minimal 5 hubungan makanan!";
+            document.getElementById('w3-feedback').className = "mt-2 text-center text-xl font-bold min-h-[2rem] bg-white p-2 rounded-xl shadow";
+        }
+
+        // Handle resize for SVG lines (re-draw them)
+        window.addEventListener('resize', () => {
+            if (currentScreen === 'screen-w3' && w3DrawnLinks.length > 0) {
+                const links = [...w3DrawnLinks]; // copy
+                w3Clear(); // hapus visual
+                w3DrawnLinks = links; // restore array
+                links.forEach(l => w3DrawLine(l.from, l.to)); // gambar ulang
+            }
+        });
+
+        // --- STREAMING_CHUNK:Logika Dunia 4 (Laboratorium)... ---
+        function w4Reset() {
+            document.getElementById('w4-bar-padi').style.height = '50%';
+            document.getElementById('w4-bar-padi').className = 'bg-green-500 w-16 transition-all duration-1000 rounded-t-lg flex items-end justify-center pb-2 text-white font-bold';
+            document.getElementById('w4-bar-padi').innerText = 'Normal';
+
+            document.getElementById('w4-bar-hama').style.height = '50%';
+            document.getElementById('w4-bar-hama').className = 'bg-yellow-500 w-16 transition-all duration-1000 rounded-t-lg flex items-end justify-center pb-2 text-white font-bold';
+            document.getElementById('w4-bar-hama').innerText = 'Normal';
+
+            document.getElementById('w4-bar-predator').style.height = '50%';
+            document.getElementById('w4-bar-predator').className = 'bg-red-500 w-16 transition-all duration-1000 rounded-t-lg flex items-end justify-center pb-2 text-white font-bold';
+            document.getElementById('w4-bar-predator').innerText = 'Normal';
+
+            document.getElementById('w4-explanation').innerText = 'Semua populasi dalam keadaan seimbang. Mari kita lihat apa yang terjadi jika salah satu berubah.';
+            document.getElementById('w4-explanation').className = 'mt-4 p-4 bg-white rounded-xl shadow-md border-l-8 border-purple-400 min-h-[6rem] text-lg font-medium';
+        }
+
+        function w4Simulate(scenario) {
+            playSound('click');
+            w4Reset();
+            
+            // Tunggu sebentar untuk animasi reset selesai
+            setTimeout(() => {
+                const barPadi = document.getElementById('w4-bar-padi');
+                const barHama = document.getElementById('w4-bar-hama');
+                const barPred = document.getElementById('w4-bar-predator');
+                const exp = document.getElementById('w4-explanation');
+
+                if (scenario === 'ular_turun') {
+                    barPred.style.height = '20%';
+                    barPred.innerText = 'Turun';
+                    barHama.style.height = '85%';
+                    barHama.innerText = 'Naik';
+                    barHama.classList.replace('bg-yellow-500', 'bg-red-500'); // Bahaya
+                    barPadi.style.height = '20%';
+                    barPadi.innerText = 'Turun';
+                    
+                    exp.innerHTML = "<strong>Skenario A (Ular Diburu):</strong><br>Jika ular berkurang, tikus (hama) kehilangan predator alaminya sehingga populasinya <strong>meningkat tajam</strong>. Akibatnya, tanaman padi akan banyak dimakan tikus dan hasil panen <strong>menurun</strong>.";
+                } 
+                else if (scenario === 'katak_turun') {
+                    barPred.style.height = '30%';
+                    barPred.innerText = 'Turun';
+                    barHama.style.height = '75%';
+                    barHama.innerText = 'Naik';
+                    barPadi.style.height = '30%';
+                    barPadi.innerText = 'Turun';
+
+                    exp.innerHTML = "<strong>Skenario B (Katak Berkurang):</strong><br>Katak memakan serangga (belalang). Jika katak berkurang, populasi belalang <strong>dapat meningkat</strong> karena tidak ada yang memangsa. Belalang yang banyak akan memakan daun padi, merusak tanaman.";
+                }
+                else if (scenario === 'pestisida') {
+                    barHama.style.height = '10%';
+                    barHama.innerText = 'Sangat Rendah';
+                    barPred.style.height = '20%';
+                    barPred.innerText = 'Turun';
+                    barPadi.style.height = '70%';
+                    barPadi.innerText = 'Naik (Sementara)';
+
+                    exp.innerHTML = "<strong>Skenario C (Pestisida Berlebih):</strong><br>Awalnya hama memang mati dan padi tumbuh baik. NAMUN, racun pestisida juga meracuni serangga baik dan mencemari air. Katak atau burung pemakan serangga kehilangan makanan atau ikut mati keracunan, merusak keseimbangan ekosistem jangka panjang.";
+                    exp.classList.replace('border-purple-400', 'border-red-500');
+                }
+            }, 100);
+        }
+
+        // --- STREAMING_CHUNK:Logika Dunia 5 (Studi Kasus)... ---
+        function w5Check(step, isCorrect) {
+            if (isCorrect) {
+                playSound('success');
+                if (step === 1) {
+                    document.getElementById('w5-step-1').classList.add('opacity-50', 'pointer-events-none');
+                    document.getElementById('w5-step-2').classList.remove('hidden');
+                    document.getElementById('w5-step-2').scrollIntoView({ behavior: 'smooth' });
+                } else if (step === 2) {
+                    document.getElementById('w5-step-2').classList.add('opacity-50', 'pointer-events-none');
+                    document.getElementById('w5-success').classList.remove('hidden');
+                    document.getElementById('w5-success').scrollIntoView({ behavior: 'smooth' });
+                    playSound('win');
+                }
+            } else {
+                playSound('error');
+                alert("Penalaran kurang tepat. Coba perhatikan lagi hubungan sebab-akibat pada jaring-jaring makanan."); // Alert hanya fallback jika UI kurang (Sesuai instruksi hindari alert, mari gunakan custom UI feedback)
+                // Implementasi non-alert:
+                // Mengubah warna tombol sementara
+            }
+        }
+        
+        // --- OVERRIDE ALERT (Kepatuhan Instruksi) ---
+        window.alert = function(msg) {
+             console.log("Custom alert:", msg);
+             // Karena instruksi melarang alert(), jika w5 salah tidak ada alert, tombol diganti merah.
+        }
+        // Perbaikan fungsi w5Check tanpa alert
+        function w5Check(step, isCorrect) {
+             const eventBtn = event.currentTarget;
+             if (isCorrect) {
+                 playSound('success');
+                 eventBtn.classList.replace('bg-gray-50', 'bg-green-200');
+                 if (step === 1) {
+                     setTimeout(()=> {
+                         document.getElementById('w5-step-1').classList.add('opacity-50', 'pointer-events-none');
+                         document.getElementById('w5-step-2').classList.remove('hidden');
+                         document.getElementById('w5-step-2').scrollIntoView({ behavior: 'smooth' });
+                     }, 1000);
+                 } else if (step === 2) {
+                     setTimeout(()=> {
+                         document.getElementById('w5-step-2').classList.add('opacity-50', 'pointer-events-none');
+                         document.getElementById('w5-success').classList.remove('hidden');
+                         document.getElementById('w5-success').scrollIntoView({ behavior: 'smooth' });
+                         playSound('win');
+                     }, 1000);
+                 }
+             } else {
+                 playSound('error');
+                 eventBtn.classList.replace('bg-gray-50', 'bg-red-200');
+                 setTimeout(()=> {
+                     eventBtn.classList.replace('bg-red-200', 'bg-gray-50');
+                 }, 1500);
+             }
+        }
+
+
+        // --- STREAMING_CHUNK:Logika Kuis Evaluasi (15 Soal)... ---
+        const quizData = [
+            // Ekosistem (Biotik/Abiotik)
+            { q: "Apa yang dimaksud dengan komponen abiotik dalam ekosistem?", o: ["Makhluk hidup seperti hewan dan tumbuhan", "Benda tak hidup seperti air, tanah, dan cahaya", "Hanya jenis jamur dan bakteri penghancur", "Kumpulan hewan pemakan daging"], a: 1, text: "Abiotik adalah komponen benda tak hidup dalam ekosistem." },
+            { q: "Manakah kelompok di bawah ini yang SELURUHNYA merupakan komponen biotik?", o: ["Air, Batu, Matahari", "Padi, Tikus, Ular", "Rumput, Tanah, Cacing", "Katak, Udara, Elang"], a: 1, text: "Biotik berarti makhluk hidup. Padi, tikus, dan ular semuanya hidup." },
+            { q: "Apa fungsi utama sinar matahari dalam ekosistem?", o: ["Menghangatkan tubuh hewan saja", "Memberikan energi bagi tumbuhan untuk membuat makanan", "Menjadi tempat tinggal burung", "Membantu penguraian bangkai"], a: 1, text: "Matahari adalah sumber energi utama. Tumbuhan butuh matahari untuk fotosintesis." },
+            { q: "Tanaman padi di sawah berperan sebagai...", o: ["Konsumen tingkat puncak", "Pengurai", "Produsen", "Konsumen tingkat I"], a: 2, text: "Padi dapat membuat makanan sendiri (fotosintesis), sehingga disebut Produsen." },
+            { q: "Jamur dan bakteri dalam ekosistem memiliki peran yang sangat penting sebagai...", o: ["Produsen", "Konsumen I", "Konsumen II", "Pengurai (Dekomposer)"], a: 3, text: "Jamur dan bakteri menguraikan sisa makhluk hidup mati menjadi zat hara penyubur tanah." },
+            
+            // Rantai Makanan & Konsumen
+            { q: "Dalam rantai makanan: Rumput ➔ Belalang ➔ Katak ➔ Ular. Hewan apakah yang berperan sebagai Konsumen Tingkat I?", o: ["Rumput", "Belalang", "Katak", "Ular"], a: 1, text: "Konsumen I adalah hewan pemakan tumbuhan (herbivora) pertama dalam rantai, yaitu Belalang." },
+            { q: "Arah tanda panah (➔) dalam diagram rantai makanan bermakna...", o: ["Arah perpindahan tempat tinggal", "Menunjukkan siapa yang memakan", "Arah aliran perpindahan energi", "Hewan tersebut berteman"], a: 2, text: "Panah menunjukkan energi berpindah dari organisme yang dimakan menuju pemangsanya." },
+            { q: "Hewan pemakan daging (karnivora) biasanya menempati posisi sebagai...", o: ["Produsen", "Konsumen I", "Konsumen II atau lebih tinggi", "Pengurai"], a: 2, text: "Karnivora memakan hewan lain (Konsumen I), sehingga mereka berada di tingkat Konsumen II, III, dst." },
+            { q: "Apa yang terjadi pada energi saat berpindah dari tumbuhan ke belalang, lalu ke katak?", o: ["Energinya semakin bertambah besar", "Energinya tetap sama rata", "Sebagian energi berkurang karena dipakai bergerak dan berupa panas", "Energinya hilang sepenuhnya"], a: 2, text: "Hanya sebagian energi yang diteruskan karena sisanya dipakai beraktivitas oleh makhluk hidup tersebut." },
+            
+            // Jaring-jaring makanan
+            { q: "Perbedaan utama rantai makanan dan jaring-jaring makanan adalah...", o: ["Jaring-jaring makanan hanya ada di laut", "Rantai makanan lebih rumit dan bercabang", "Jaring-jaring makanan adalah kumpulan rantai makanan yang saling berhubungan", "Tidak ada bedanya, hanya beda nama"], a: 2, text: "Jaring-jaring makanan memperlihatkan hubungan makan yang lebih nyata dan kompleks di alam." },
+            { q: "Dalam suatu jaring-jaring makanan, seekor elang dapat memakan...", o: ["Hanya ular saja", "Bisa memakan ular, tikus, atau ayam (lebih dari satu sumber makanan)", "Hanya memakan produsen", "Hanya makan hewan yang sudah mati"], a: 1, text: "Dalam jaring-jaring makanan, satu organisme puncak dapat memangsa beberapa jenis hewan yang berbeda." },
+            { q: "Manakah diagram rantai makanan yang paling masuk akal?", o: ["Elang ➔ Ular ➔ Katak ➔ Rumput", "Rumput ➔ Ulat ➔ Burung kecil ➔ Elang", "Padi ➔ Elang ➔ Ular ➔ Tikus", "Katak ➔ Belalang ➔ Rumput"], a: 1, text: "Rumput (produsen) dimakan Ulat (Konsumen I), dimakan Burung (Konsumen II), dimakan Elang (Konsumen Puncak)." },
+            
+            // Analisis Dampak & Pelestarian
+            { q: "Jika populasi burung hantu (predator tikus) banyak diburu manusia, apa dampak terbesarnya bagi sawah?", o: ["Tikus ikut habis", "Padi tumbuh semakin subur", "Populasi tikus meledak dan panen padi gagal", "Tidak ada pengaruh sama sekali"], a: 2, text: "Hilangnya predator alami menyebabkan hama berkembang biak tanpa kendali." },
+            { q: "Tindakan manusia yang dapat MENJAGA keseimbangan ekosistem sungai adalah...", o: ["Membuang limbah pabrik ke sungai", "Menangkap ikan dengan pukat harimau", "Menanam pohon di bantaran sungai dan tidak membuang sampah sembarangan", "Membuang pestisida sisa ke aliran air"], a: 2, text: "Menjaga kebersihan dan vegetasi bantaran sungai mendukung kehidupan biota air." },
+            { q: "Mengapa pemakaian pestisida kimia yang berlebihan itu buruk?", o: ["Karena harganya mahal", "Bisa membunuh hewan bukan sasaran dan mencemari lingkungan", "Membuat padi tumbuh terlalu cepat", "Karena disukai burung"], a: 1, text: "Pestisida berlebih tidak hanya membunuh hama, tapi juga meracuni tanah, air, dan organisme berguna." }
+        ];
+
+        let quizState = { current: 0, score: 0, answers: [] };
+
+        function quizStart() {
+            quizState = { current: 0, score: 0, answers: [] };
+            document.getElementById('quiz-result-area').classList.add('hidden');
+            document.getElementById('quiz-area').classList.remove('hidden');
+            quizRenderQ();
+        }
+
+        function quizRenderQ() {
+            const qData = quizData[quizState.current];
+            document.getElementById('quiz-progress').innerText = `${quizState.current + 1}/${quizData.length}`;
+            document.getElementById('quiz-question').innerText = `${quizState.current + 1}. ${qData.q}`;
+            
+            const optionsBox = document.getElementById('quiz-options');
+            optionsBox.innerHTML = '';
+            
+            qData.o.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'text-left p-4 rounded-xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 font-medium text-lg transition';
+                btn.innerText = String.fromCharCode(65 + idx) + ". " + opt;
+                btn.onclick = () => quizSelect(idx, btn);
+                optionsBox.appendChild(btn);
+            });
+            
+            document.getElementById('quiz-feedback-box').classList.add('hidden');
+            document.getElementById('quiz-next-btn').classList.add('hidden');
+        }
+
+        function quizSelect(selectedIndex, btnElement) {
+            const qData = quizData[quizState.current];
+            const isCorrect = (selectedIndex === qData.a);
+            
+            // Disable semua tombol
+            const allBtns = document.getElementById('quiz-options').querySelectorAll('button');
+            allBtns.forEach((b, idx) => {
+                b.onclick = null;
+                b.classList.remove('hover:bg-indigo-100');
+                if(idx === qData.a) {
+                    b.classList.add('bg-green-200', 'border-green-500'); // Benar
+                } else if (idx === selectedIndex && !isCorrect) {
+                    b.classList.add('bg-red-200', 'border-red-500'); // Salah pilih
+                } else {
+                    b.classList.add('opacity-50');
+                }
+            });
+
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            const feedbackText = document.getElementById('quiz-feedback-text');
+            
+            feedbackBox.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
+            if (isCorrect) {
+                playSound('success');
+                quizState.score++;
+                feedbackBox.classList.add('bg-green-100');
+                feedbackText.innerHTML = `<span class="text-green-700">✅ <strong>Tepat Sekali!</strong><br>${qData.text}</span>`;
+            } else {
+                playSound('error');
+                feedbackBox.classList.add('bg-red-100');
+                feedbackText.innerHTML = `<span class="text-red-700">❌ <strong>Kurang Tepat.</strong><br>${qData.text}</span>`;
+            }
+
+            document.getElementById('quiz-next-btn').classList.remove('hidden');
+        }
+
+        function quizNext() {
+            playSound('click');
+            quizState.current++;
+            if (quizState.current < quizData.length) {
+                quizRenderQ();
+                // scroll up
+                document.getElementById('quiz-area').scrollTop = 0;
+            } else {
+                quizFinish();
+            }
+        }
+
+        function quizFinish() {
+            playSound('win');
+            document.getElementById('quiz-area').classList.add('hidden');
+            document.getElementById('quiz-result-area').classList.remove('hidden');
+            document.getElementById('quiz-result-area').classList.add('flex');
+            
+            const finalScore = Math.round((quizState.score / quizData.length) * 100);
+            document.getElementById('quiz-score').innerText = finalScore;
+            document.getElementById('quiz-correct').innerText = quizState.score;
+            document.getElementById('quiz-wrong').innerText = quizData.length - quizState.score;
+            
+            let medal = '🥉';
+            if(finalScore >= 80) medal = '🥇';
+            else if(finalScore >= 60) medal = '🥈';
+            document.getElementById('quiz-medal').innerText = medal;
+            
+            // Save to localStorage if available
+            try {
+                localStorage.setItem('harmoni_score', finalScore);
+            } catch(e) {}
+        }
+        
+        // --- Inisialisasi Aplikasi Saat Dimuat ---
+        window.onload = function() {
+            console.log("Aplikasi Pembelajaran Dimuat.");
+        };
+    </script>
+</body>
+</html>
